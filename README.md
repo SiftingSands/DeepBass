@@ -1,5 +1,5 @@
-# Insight_Project_Framework
-Framework for machine learning projects at Insight Data Science. 
+# Deep Bass
+Automated and intelligent fading between subsequent songs.
 
 ## Motivation for this project format:
 - **src** : Put all source code for production within structured directory
@@ -28,14 +28,10 @@ git push origin $branch_name
 ```
 
 ## Requisites
-- List all packages and software needed to build the environment
-- This could include cloud command line tools (i.e. gsutil), package managers (i.e. conda), etc.
-```
-# Example
-- A
-- B
-- C
-```
+- 'numpy'
+- 'librosa'
+- 'streamlit'
+- 'matplotlib'
 
 ## Build Environment
 - Include instructions of how to launch scripts in the build subfolder
