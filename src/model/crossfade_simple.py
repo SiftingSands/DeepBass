@@ -1,6 +1,6 @@
 import numpy as np
 
-def Crossfade_Simple(FirstSong, SecondSong, Ramp, snippet_time, sr):
+def Crossfade_Simple(FirstSong, SecondSong, Ramp, fade_length):
     """Create snippet of audio with simple cross faded transition between 
     two songs
     
@@ -10,11 +10,10 @@ def Crossfade_Simple(FirstSong, SecondSong, Ramp, snippet_time, sr):
         SecondSong (numpy array, float) : Second Song
         
         Ramp (str) : Type of ramping function to use
-        snippet_time (float) : Time taken from the beginning of the first and 
-        the end of the second song for mixing
         
-        sr (float) : Sampling rate of both songs
-        
+        fade_length (int) : Time steps taken from the beginning of the first 
+        and the end of the second song for mixing
+
     Returns:
         Mix (numpy array, float) : Mixed audio stream
         
@@ -23,9 +22,8 @@ def Crossfade_Simple(FirstSong, SecondSong, Ramp, snippet_time, sr):
         x2_trim_faded (numpy array, float) : Faded second song beginning
     """
     
-    snippet_length = snippet_time * sr # number of samples
-    x1_trim =FirstSong[-snippet_length:]
-    x2_trim =SecondSong[0:snippet_length]
+    x1_trim =FirstSong[-fade_length:]
+    x2_trim =SecondSong[0:fade_length]
 
     if Ramp == 'Linear':
         x1_trim_faded = x1_trim*np.linspace(1, 0, len(x1_trim))
