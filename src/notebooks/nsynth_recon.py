@@ -12,17 +12,19 @@ import time
 
 """Demo of NSynth embedding of audio and its reconstruction
 
-Args:
+User Parameters:
     tlen (float): Amount of time for reconstruction
     silence_len (float) : Skip this many seconds of the ending that is silent
     output_dir (str) : Directory to save the reconstruction
     model_dir (str) : Directory of the pretrained model (tf checkpoint)
 
-    sr must be 16 kHz per the model architecture
-    
 Returns:
     Streamlit notebook
     Reconstructed audio in the form of a wav file
+    
+Notes:
+    sr must be 16 kHz per the model architecture
+    
 """
 
 # Directory where mp3 are stored.
@@ -56,7 +58,7 @@ st.write('Encoding shape ' + str(encoding.shape))
 # Save encoding
 np.save(filenames[0] + '.npy', encoding)
 
-# Plot PCM and
+# Plot PCM and encoding
 fig, axs = plt.subplots(2, 1, figsize=(10, 5))
 axs[0].plot(x1)
 axs[0].set_title('Audio Signal')
@@ -75,6 +77,6 @@ st.write('Decoding took ' + str((end-start)) + ' seconds')
 # Evaluate reconstruction
 x1_gen, _ = Load(output_dir, 'gen_' + filenames[0], sr=sr)
 fig, ax = plt.subplots(figsize=(10, 5))
-axs.plot(x1_gen)
-axs.set_title('Reconstructed Audio Signal')
+ax.plot(x1_gen)
+ax.set_title('Reconstructed Audio Signal')
 st.pyplot()
