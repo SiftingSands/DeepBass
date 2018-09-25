@@ -77,7 +77,7 @@ silence_len1 = 11 # Skip the near silent part of the ending
 x1 = x1[:-silence_len1*sr]
 x1 = x1[-sr*t_len:]
 
-silence_len2 = 4
+silence_len2 = 1
 x2 = x2[silence_len2*sr:]
 x2 = x2[:t_len*sr]
 
@@ -108,7 +108,7 @@ end = time.time()
 st.write('Encoding took ' + str((end-start)) + ' seconds')
 
 # Create cross fading in the latent space
-fade_type = 'HannFade'
+fade_type = 'LinearFade'
 xfade_encoding = crossfade(enc1, enc2, fade_type)
 
 fig, axs = plt.subplots(3, 1, figsize=(10, 7))
@@ -118,12 +118,23 @@ axs[1].plot(enc2[0])
 axs[1].set_title('Encoding 2')
 axs[2].plot(xfade_encoding[0])
 axs[2].set_title('Crossfade')
-st.pyplot()
+st.pyplot()r
 
 start = time.time()
-fastgen.synthesize(xfade_encoding, checkpoint_path = model_dir, 
-                   save_paths=['enc_' + fade_type + '_' + filenames[0] + \
-                               filenames[1]], 
-                   samples_per_save=sample_length)
+@st.cache
+def synth():
+    fastgen.synthesize(xfade_encoding, checkpoint_path = model_dir, 
+                       save_paths=['enc_' + fade_type + '_' + filenames[0] + \
+                                   filenames[1]], 
+                       samples_per_save=sample_length)
+    return None
+synth()
 end = time.time()
 st.write('Decoding took ' + str((end-start)) + ' seconds')
+
+xfade_audio, _ = Load(output_dir, 'enc_' + fade_type + '_' + filenames[0] + \
+                               filenames[1], sr=sr)
+fig, ax = plt.subplots(figsize=(10, 7))
+ax.plot(xfade_audio)
+ax.set_title('Crossfaded audio')
+st.pyplot()
