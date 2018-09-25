@@ -21,7 +21,9 @@ def is_dir(dirname):
         return dirname
 ###############################################################################
 """Example
+
 python main.py ~/DeepBass/data/raw/House_Top20 Linear 10 test 44100
+
 """
 
 # Directory where mp3s are stored
