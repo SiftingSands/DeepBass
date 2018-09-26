@@ -50,7 +50,8 @@ st.write('Loading data...')
 audio = load_data(AUDIO_DIR, filenames[1], sr)
 st.write('Done! (using st.cache)')
 
-t_snip = 30 # seconds
+# Crop to either the beginning or the ending
+t_snip = 30
 style = 'begin'
 if style == 'begin':
     snippet = audio[:int(t_snip*sr)]
@@ -59,20 +60,22 @@ else:
 audio_RMS_overall = np.sqrt(np.mean(audio**2))
 st.write(audio_RMS_overall)
 
+# Create sliding windows
 window_size = 0.25
 window_step = window_size/2
-
-test = window(snippet, w=int(window_size*sr), o=int(window_step*sr), copy=True)
-st.write(test.shape)
+Windows = window(snippet, w=int(window_size*sr), o=int(window_step*sr), 
+                 copy=True)
+st.write(Windows.shape)
 
 Threshold = 15 
 RMS_Threshold = Threshold*audio_RMS_overall/100
 
+# Loop over windows from beginning to end until the RMS is below the threshold
 Detected = True
 i = 0
 target_index = 0
 while Detected:
-    RMS = np.sqrt(np.mean(test[i,:]**2))
+    RMS = np.sqrt(np.mean(Windows[i,:]**2))
     if style == 'begin':
         if RMS >= RMS_Threshold:
             Detected = False
@@ -86,6 +89,7 @@ while Detected:
             i += 1
             target_index += window_step*sr
 
+# Plot audio with a red line denoting the silence cutoff
 fig, ax = plt.subplots()
 ax.plot(snippet)
 ax.axvline(target_index,linewidth=2, color='r')
