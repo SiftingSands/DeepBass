@@ -52,7 +52,7 @@ st.write('Done! (using st.cache)')
 
 # Crop to either the beginning or the ending
 t_snip = 30
-style = 'begin'
+style = 'end'
 if style == 'begin':
     snippet = audio[:int(t_snip*sr)]
 else:

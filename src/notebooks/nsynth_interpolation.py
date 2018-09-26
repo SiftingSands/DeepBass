@@ -9,6 +9,7 @@ sys.path.insert(0, '/home/ubuntu/DeepBass/src')
 from ingestion.IO_utils import Load, Save
 import streamlit as st
 import time
+import math
 
 ###############################################################################
 
@@ -19,7 +20,7 @@ def LinearFade(length):
 ###############################################################################
     
 def HannFade(length):
-    fadein = (0.5 * (1.0 - np.cos(3.1415 * np.arange(length) / 
+    fadein = (0.5 * (1.0 - np.cos(math.pi * np.arange(length) / 
                                   float(length)))).reshape(1, -1, 1)
     return fadein
 
