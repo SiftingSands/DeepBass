@@ -118,7 +118,7 @@ axs[1].plot(enc2[0])
 axs[1].set_title('Encoding 2')
 axs[2].plot(xfade_encoding[0])
 axs[2].set_title('Crossfade')
-st.pyplot()r
+st.pyplot()
 
 start = time.time()
 @st.cache
