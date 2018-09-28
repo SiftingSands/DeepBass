@@ -22,7 +22,7 @@ def is_dir(dirname):
 ###############################################################################
 """Example
 
-python main_NSynth.py ~/DeepBass/data/raw/EDM_Test ~/DeepBass/src/notebooks/wavenet-ckpt/model.ckpt-200000 Dilation 1 /home/ubuntu/DeepBass/data/processed test -rep=3
+python main_NSynth.py ~/DeepBass/data/raw/Exp1 Ladonna.mp3 IMRemix.mp3 ~/DeepBass/src/notebooks/wavenet-ckpt/model.ckpt-200000 HannFade 7 /home/ubuntu/DeepBass/data/processed Exp1
 
 """
 
@@ -30,10 +30,12 @@ python main_NSynth.py ~/DeepBass/data/raw/EDM_Test ~/DeepBass/src/notebooks/wave
 parser = argparse.ArgumentParser(description='Load Audio Files')
 parser.add_argument('playlist_dir', help='Directory of playlist with audio \
                     files', action=FullPaths, type=is_dir)
+parser.add_argument('FirstSong', help='Filename of for the first song')
+parser.add_argument('SecondSong', help='Filename of for the second song')
 parser.add_argument('model_dir', help='Directory of the pretrained NSynth model',
                     type=str)
 parser.add_argument('fade_style', help='Method for cross fading', 
-                    choices=['HannFade', 'LinearFade', 'Dilation'])
+                    choices=['HannFade', 'LinearFade', 'Extend'])
 parser.add_argument('fade_time', help='Specify the cross fading duration',
                     type=float)
 parser.add_argument('save_dir', help='Directory to save the audio files', 
@@ -46,51 +48,44 @@ parser.add_argument('-sr', help='Audio sampling rate, must be 16kHz for NSynth',
                     default = 16000, type=int)
 args = parser.parse_args()
 
-# Alphabetical order for now
-playlist_order = os.listdir(args.playlist_dir)
-
+# Alphabetical order for now and ignore subdirectories
+playlist_order = [f for f in os.listdir(args.playlist_dir) if \
+                  os.path.isfile(os.path.join(args.playlist_dir, f))]
 fade_length = int(args.fade_time * args.sr) # number of samples for fade
 
-for n in range(len(playlist_order)-1):
-    # Load Songs
-    if n==0:
-        FirstSong,_ = Load(args.playlist_dir, playlist_order[n], args.sr)
-        SecondSong,_ = Load(args.playlist_dir, playlist_order[n+1], args.sr)
-        
-    else:
-        FirstSong = SecondSong # Remove redundant load operation
-        SecondSong,_ = Load(args.playlist_dir, playlist_order[n+1], args.sr)
+# Load Songs
+FirstSong, _ = Load(args.playlist_dir, args.FirstSong, args.sr)
+SecondSong, _ = Load(args.playlist_dir, args.SecondSong, args.sr)
 
-    # Remove any silence at the end of the first song
-    # and the beginning of the second song
-    end_index = SR(FirstSong, 'end')
-    start_index = SR(SecondSong, 'begin')
-    FirstSong = FirstSong[:end_index]
-    SecondSong = SecondSong[start_index:]
-    
-    # Create transition
-    xfade_audio, x1_trim_mu, x2_trim_mu, enc1, enc2 = NSynth(FirstSong, 
-                                                             SecondSong, 
-                                                             args.fade_style,
-                                                             fade_length,
-                                                             args.model_dir,
-                                                             args.save_dir,
-                                                             args.savename,
-                                                             args.rep)
-    
-    # Save encodings of the audio
-    np.save(str(n) + '_begin_enc' + '.npy', enc1)
-    np.save(str(n) + '_end_enc' + '.npy', enc2)
-    
-    # Save mu encoded trim segments for reference
-#    Save(args.save_dir, 'end.wav', x1_trim_mu, args.sr)
-#    Save(args.save_dir, 'begin.wav', x2_trim_mu, args.sr)
-    
-    # Create the mix between the two songs
-    if args.fade_style == 'Dilation':
-        transition = np.concatenate(xfade_audio)
-        Mix = np.concatenate((FirstSong, transition, SecondSong), axis=0)
-        Save(args.save_dir, args.savename + 'Full', Mix, args.sr)
-    
-    print(str(n))
-    
+# Remove any silence at the end of the first song
+# and the beginning of the second song
+t_snip = 30 # interrogation length in seconds
+end_index = SR(FirstSong, 'end', t_snip=t_snip)
+end_index = int(t_snip*args.sr - end_index) # change index reference frame 
+start_index = SR(SecondSong, 'begin', t_snip=t_snip)
+FirstSong = FirstSong[:-end_index]
+SecondSong = SecondSong[start_index:]
+
+# Create transition
+xfade_audio, x1_trim, x2_trim, enc1, enc2 = NSynth(FirstSong,
+                                                   SecondSong,
+                                                   args.fade_style,
+                                                   fade_length,
+                                                   args.model_dir,
+                                                   args.save_dir,
+                                                   args.savename,
+                                                   args.rep)
+
+# Save encodings of the audio
+np.save('begin_enc' + '.npy', enc1)
+np.save('end_enc' + '.npy', enc2)
+
+# Save mu encoded trim segments for reference
+Save(args.save_dir, 'end.wav', x1_trim, args.sr)
+Save(args.save_dir, 'begin.wav', x2_trim, args.sr)
+
+# Create the mix between the two songs
+if args.fade_style == 'Dilation':
+    transition = np.concatenate(xfade_audio)
+    Mix = np.concatenate((FirstSong, transition, SecondSong), axis=0)
+    Save(args.save_dir, args.savename + 'Full', Mix, args.sr)

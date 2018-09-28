@@ -19,8 +19,6 @@ def HannFade(length):
     return fadein
 
 ###############################################################################
-    
-#def DilateLinearFade()
 
 def fade(encoding, fade_type, mode='in'):
     length = encoding.shape[1]
@@ -37,25 +35,6 @@ def fade(encoding, fade_type, mode='in'):
 
 def crossfade(encoding1, encoding2, fade_type):
     return fade(encoding1, fade_type, 'out') + fade(encoding2, fade_type, 'in')
-
-###############################################################################
-
-def mu_law(x, mu=255):
-    """ Mu-Law encoding in numpy
-    Args:
-        x: The audio samples to encode.
-        mu: The Mu to use in our Mu-Law.
-    Returns:
-        out: The Mu-Law encoded data.
-    """
-    out = np.sign(x) * np.log(1 + mu * np.abs(x)) / np.log(1 + mu)
-    return out.astype(np.uint8)
-
-###############################################################################
-    
-def Interp(enc1, enc2, weight):
-    interp_enc = enc1*weight + enc2*(1-weight)
-    return interp_enc
 
 ###############################################################################
     
@@ -101,35 +80,24 @@ def NSynth(FirstSong, SecondSong, fade_type, fade_length, model_dir, save_dir,
     end = time.time()
     print('*** Encoding took ' + str((end-start)) + ' seconds ***')
     
-    os.chdir(save_dir)
-    if fade_type == 'Dilation':
-        xfade_audio = []
-        # Create linear interpolation
-        end = 1.0/(repeats+1)
-        start = 1 - end
-        weights = np.linspace(start, end, num=repeats)
-        for n in range(repeats):
-            interp_enc = Interp(enc1,enc2,weights[n])
-            fastgen.synthesize(interp_enc, checkpoint_path = model_dir, 
-                           save_paths=[savename + '_' + str(n) + '.wav'], 
-                           samples_per_save=fade_length)
-            
-            temp, _ = librosa.load(savename + '_' + str(n) + '.wav')
-            xfade_audio.append(temp)
-        
+    if fade_type == 'Extend':
+        repeated_enc1 = np.repeat(enc1, repeats)
+        repeated_enc2 = np.repeat(enc2, repeats)
+        xfade_encoding = crossfade(repeated_enc1, repeated_enc2, 'HannFade')
     else:
         xfade_encoding = crossfade(enc1, enc2, fade_type)
-        start = time.time()
-        fastgen.synthesize(xfade_encoding, checkpoint_path = model_dir, 
-                           save_paths=[savename + '.wav'], 
-                           samples_per_save=fade_length)
-        end = time.time()
-        print('*** Decoding took ' + str((end-start)) + ' seconds ***')
-    
-        # Load the generated audio and the mu-law encodings for comparison
-        xfade_audio, _ = librosa.load(savename + '.wav')
         
-    x1_trim_mu = mu_law(x1_trim)
-    x2_trim_mu = mu_law(x2_trim)
+    # fastgen.synthesize only takes files from the local path
+    os.chdir(save_dir)
+    start = time.time()
+    fastgen.synthesize(xfade_encoding, checkpoint_path = model_dir, 
+                       save_paths=[savename + '.wav'], 
+                       samples_per_save=fade_length)
+    end = time.time()
+    print('*** Decoding took ' + str((end-start)) + ' seconds ***')
+
+    # Load the generated audio and the mu-law encodings for comparison
+    xfade_audio, _ = librosa.load(savename + '.wav')
+        
     
-    return xfade_audio, x1_trim_mu, x2_trim_mu, enc1, enc2
+    return xfade_audio, x1_trim, x2_trim, enc1, enc2
