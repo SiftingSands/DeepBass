@@ -1,91 +1,77 @@
 import os
-import argparse
 from ingestion.IO_utils import Load, Save
 from model.crossfade_NSynth import NSynth
 from preprocess.SilenceRemoval import SR
+import sys
 import numpy as np
+import configparser
+import errno
 
-###############################################################################
-# Directory fault checking
-class FullPaths(argparse.Action):
-    """Expand user- and relative-paths"""
-    def __call__(self, parser, namespace, values, option_string=None):
-        setattr(namespace, self.dest, os.path.abspath(os.path.expanduser(values)))
-
-def is_dir(dirname):
-    """Checks if a path is an actual directory"""
-    if not os.path.isdir(dirname):
-        msg = "{0} is not a directory".format(dirname)
-        raise argparse.ArgumentTypeError(msg)
-    else:
-        return dirname
-###############################################################################
-"""Example
-
-python main_NSynth.py ~/DeepBass/data/raw/Exp1 Ladonna.mp3 IMRemix.mp3 ~/DeepBass/src/notebooks/wavenet-ckpt/model.ckpt-200000 HannFade 7 /home/ubuntu/DeepBass/data/processed Exp1
+"""Main script to perform cross fading between two songs using low-dimensional
+   embeddings created from the NSynth Wavenet autoencoder.
 
 """
 
-# Directory where mp3s are stored
-parser = argparse.ArgumentParser(description='Load Audio Files')
-parser.add_argument('playlist_dir', help='Directory of playlist with audio \
-                    files', action=FullPaths, type=is_dir)
-parser.add_argument('FirstSong', help='Filename of for the first song')
-parser.add_argument('SecondSong', help='Filename of for the second song')
-parser.add_argument('model_dir', help='Directory of the pretrained NSynth model',
-                    type=str)
-parser.add_argument('fade_style', help='Method for cross fading', 
-                    choices=['HannFade', 'LinearFade', 'Extend'])
-parser.add_argument('fade_time', help='Specify the cross fading duration',
-                    type=float)
-parser.add_argument('save_dir', help='Directory to save the audio files', 
-                    action=FullPaths, type=is_dir)
-parser.add_argument('savename', help='Specify the prefix for saving the playlist',
-                    type=str)
-parser.add_argument('-rep', help='Number of repeats for dilation option', 
-                    default = 3, type=int)
-parser.add_argument('-sr', help='Audio sampling rate, must be 16kHz for NSynth', 
-                    default = 16000, type=int)
-args = parser.parse_args()
+config = configparser.ConfigParser()
+config_path = '../configs/config.ini'
+# Create config if it does not exist
+if not os.path.exists(config_path):
+    sys.path.insert(0, '../') # Navigate to config folder
+    from configs.CreateConfig import createconfig
+    createconfig(config_path)
+
+# Load config pile and make namespace less bulky
+config.read(config_path)
+sr = config.getint('DEFAULT','samplingrate')
+fade_style = config['XFade Settings']['Style']
+fade_time = config.getfloat('XFade Settings','Time')
+t_snip = config.getfloat('Preprocess','SR window duration')
+FirstSong = config['IO']['FirstSong']
+SecondSong = config['IO']['SecondSong']
+load_dir = config['IO']['Load Directory']
+save_dir = config['IO']['Save Directory']
+savename = config['IO']['Save Name']
+modelweights_path = config['IO']['Model Weights']
 
 # Alphabetical order for now and ignore subdirectories
-playlist_order = [f for f in os.listdir(args.playlist_dir) if \
-                  os.path.isfile(os.path.join(args.playlist_dir, f))]
-fade_length = int(args.fade_time * args.sr) # number of samples for fade
+playlist_order = [f for f in os.listdir(load_dir) if \
+                  os.path.isfile(os.path.join(load_dir, f))]
 
+# number of samples for fade
+fade_length = int(fade_time * sr)
 # Load Songs
-FirstSong, _ = Load(args.playlist_dir, args.FirstSong, args.sr)
-SecondSong, _ = Load(args.playlist_dir, args.SecondSong, args.sr)
+FirstSong, _ = Load(load_dir, FirstSong, sr)
+SecondSong, _ = Load(load_dir, SecondSong, sr)
 
 # Remove any silence at the end of the first song
 # and the beginning of the second song
-t_snip = 30 # interrogation length in seconds
 end_index = SR(FirstSong, 'end', t_snip=t_snip)
-end_index = int(t_snip*args.sr - end_index) # change index reference frame 
+end_index = int(t_snip*sr - end_index) # change index reference frame 
 start_index = SR(SecondSong, 'begin', t_snip=t_snip)
-FirstSong = FirstSong[:-end_index]
+FirstSong = FirstSong[:-end_index-1]
 SecondSong = SecondSong[start_index:]
+
+# Create the save folder if it does not exist
+if not os.path.exists(save_dir):
+    try:
+        os.makedirs(save_dir)
+    except OSError as exc: # Guard against race condition
+        if exc.errno != errno.EEXIST:
+            raise
 
 # Create transition
 xfade_audio, x1_trim, x2_trim, enc1, enc2 = NSynth(FirstSong,
                                                    SecondSong,
-                                                   args.fade_style,
+                                                   fade_style,
                                                    fade_length,
-                                                   args.model_dir,
-                                                   args.save_dir,
-                                                   args.savename,
-                                                   args.rep)
+                                                   modelweights_path,
+                                                   save_dir,
+                                                   savename)
 
 # Save encodings of the audio
 np.save('begin_enc' + '.npy', enc1)
 np.save('end_enc' + '.npy', enc2)
 
 # Save mu encoded trim segments for reference
-Save(args.save_dir, 'end.wav', x1_trim, args.sr)
-Save(args.save_dir, 'begin.wav', x2_trim, args.sr)
-
-# Create the mix between the two songs
-if args.fade_style == 'Dilation':
-    transition = np.concatenate(xfade_audio)
-    Mix = np.concatenate((FirstSong, transition, SecondSong), axis=0)
-    Save(args.save_dir, args.savename + 'Full', Mix, args.sr)
+Save(save_dir, 'end.wav', x1_trim, sr)
+Save(save_dir, 'begin.wav', x2_trim, sr)

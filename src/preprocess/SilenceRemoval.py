@@ -15,7 +15,7 @@ User Parameters:
     
     Threshold (float) : Percentage of overall RMS to cut off silence
     
-    str (int) : Sampling rate - Must be 16kHz for the NSynth architecture
+    sr (int) : Sampling rate - Must be 16kHz for the NSynth architecture
     
 Returns:
     target_index is the cutoff for silence
@@ -56,17 +56,27 @@ def SR(audio, mode, t_snip = 30, window_size = 0.25, window_step = 0.125,
     target_index = 0
     while Detected:
         RMS = np.sqrt(np.mean(Windows[i,:]**2))
+        
         if mode == 'begin':
             if RMS >= RMS_Threshold:
                 Detected = False
-            else:
-                i += 1
-                target_index += window_step*sr
-        elif mode == 'end': # Invalid modes were already detected upstream
-            if RMS <= RMS_Threshold:
+            elif i == len(Windows[:,0])-1:
+                Warning('The entirety of the beginning is silent. Clipping \
+                        by ' + "{:10.2f}".format(t_snip) + ' seconds')
+                target_index = int(t_snip*sr)
                 Detected = False
             else:
                 i += 1
                 target_index += window_step*sr
-                
+
+        elif mode == 'end': # Invalid modes were already detected upstream
+            if RMS <= RMS_Threshold:
+                Detected = False
+            elif i == len(Windows[:,0])-1:
+                Warning('No silence detected at the ending. No clipping.')
+                target_index = int(t_snip*sr)
+                Detected = False
+            else:
+                i += 1
+                target_index += window_step*sr
     return int(target_index)

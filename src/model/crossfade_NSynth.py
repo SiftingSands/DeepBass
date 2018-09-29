@@ -39,7 +39,7 @@ def crossfade(encoding1, encoding2, fade_type):
 ###############################################################################
     
 def NSynth(FirstSong, SecondSong, fade_type, fade_length, model_dir, save_dir,
-           savename, repeats=3):
+           savename):
     """Create snippet of audio with cross fading in the embedding space
     Resulting audio is the same length as the input songs
     
@@ -80,13 +80,8 @@ def NSynth(FirstSong, SecondSong, fade_type, fade_length, model_dir, save_dir,
     end = time.time()
     print('*** Encoding took ' + str((end-start)) + ' seconds ***')
     
-    if fade_type == 'Extend':
-        repeated_enc1 = np.repeat(enc1, repeats)
-        repeated_enc2 = np.repeat(enc2, repeats)
-        xfade_encoding = crossfade(repeated_enc1, repeated_enc2, 'HannFade')
-    else:
-        xfade_encoding = crossfade(enc1, enc2, fade_type)
-        
+    xfade_encoding = crossfade(enc1, enc2, fade_type)
+    
     # fastgen.synthesize only takes files from the local path
     os.chdir(save_dir)
     start = time.time()
