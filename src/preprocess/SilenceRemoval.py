@@ -58,7 +58,7 @@ def SR(audio, mode, t_snip = 30, window_size = 0.25, window_step = 0.125,
         RMS = np.sqrt(np.mean(Windows[i,:]**2))
         
         if mode == 'begin':
-            if RMS >= RMS_Threshold:
+            if RMS >= RMS_Threshold: # Assume start quiet and end loud
                 Detected = False
             elif i == len(Windows[:,0])-1:
                 Warning('The entirety of the beginning is silent. Clipping \
@@ -67,10 +67,10 @@ def SR(audio, mode, t_snip = 30, window_size = 0.25, window_step = 0.125,
                 Detected = False
             else:
                 i += 1
-                target_index += window_step*sr
+                target_index += int(window_step*sr)
 
         elif mode == 'end': # Invalid modes were already detected upstream
-            if RMS <= RMS_Threshold:
+            if RMS <= RMS_Threshold: # Assume that we start loud and end quiet
                 Detected = False
             elif i == len(Windows[:,0])-1:
                 Warning('No silence detected at the ending. No clipping.')
@@ -78,5 +78,14 @@ def SR(audio, mode, t_snip = 30, window_size = 0.25, window_step = 0.125,
                 Detected = False
             else:
                 i += 1
-                target_index += window_step*sr
-    return int(target_index)
+                target_index += int(window_step*sr)
+
+    # Trim the silence
+    if mode == 'begin':
+        audio_trim = audio[target_index:]
+    elif mode == 'end':
+        # change index reference frame 
+        end_index = int(t_snip*sr - target_index) 
+        audio_trim = audio[:-end_index-1]
+        
+    return audio_trim

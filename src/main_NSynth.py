@@ -45,11 +45,8 @@ SecondSong, _ = Load(load_dir, SecondSong, sr)
 
 # Remove any silence at the end of the first song
 # and the beginning of the second song
-end_index = SR(FirstSong, 'end', t_snip=t_snip)
-end_index = int(t_snip*sr - end_index) # change index reference frame 
-start_index = SR(SecondSong, 'begin', t_snip=t_snip)
-FirstSong = FirstSong[:-end_index-1]
-SecondSong = SecondSong[start_index:]
+FirstSong_trim = SR(FirstSong, 'end', t_snip=t_snip)
+SecondSong_trim = SR(SecondSong, 'begin', t_snip=t_snip)
 
 # Create the save folder if it does not exist
 if not os.path.exists(save_dir):
