@@ -24,7 +24,7 @@ set to 1. For training in 200k iterations, they both should be 32.
 # internal imports
 import tensorflow as tf
 import utils
-import pdb; pdb.set_trace()
+
 slim = tf.contrib.slim
 FLAGS = tf.app.flags.FLAGS
 
@@ -64,7 +64,7 @@ def main(unused_argv=None):
   with tf.Graph().as_default():
     total_batch_size = FLAGS.total_batch_size
     assert total_batch_size % FLAGS.worker_replicas == 0
-    worker_batch_size = total_batch_size / FLAGS.worker_replicas
+    worker_batch_size = int(total_batch_size / FLAGS.worker_replicas)
 
     # Run the Reader on the CPU
     cpu_device = "/job:localhost/replica:0/task:0/cpu:0"
@@ -85,7 +85,7 @@ def main(unused_argv=None):
 
       # pylint: disable=cell-var-from-loop
       lr = tf.constant(config.learning_rate_schedule[0])
-      for key, value in config.learning_rate_schedule.iteritems():
+      for key, value in config.learning_rate_schedule.items():
         lr = tf.cond(
             tf.less(global_step, key), lambda: lr, lambda: tf.constant(value))
       # pylint: enable=cell-var-from-loop
