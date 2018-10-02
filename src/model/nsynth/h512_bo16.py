@@ -20,9 +20,9 @@ from __future__ import print_function
 # internal imports
 from six.moves import range  # pylint: disable=redefined-builtin
 import tensorflow as tf
-from magenta.models.nsynth import reader
-from magenta.models.nsynth import utils
-from magenta.models.nsynth.wavenet import masked
+import reader
+import utils
+import masked
 
 
 class FastGenerationConfig(object):
@@ -141,7 +141,7 @@ class Config(object):
   """Configuration object that helps manage the graph."""
 
   def __init__(self, train_path=None):
-    self.num_iters = 200000
+    self.num_iters = 240000
     self.learning_rate_schedule = {
         0: 2e-4,
         90000: 4e-4 / 3,

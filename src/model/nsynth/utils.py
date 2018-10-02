@@ -46,8 +46,8 @@ def get_module(module_path):
   Returns:
     module: Imported module.
   """
-  import_path = "magenta.models.nsynth."
-  module = importlib.import_module(import_path + module_path)
+  
+  module = importlib.import_module(module_path)
   return module
 
 
@@ -78,7 +78,9 @@ def mu_law(x, mu=255, int8=False):
   Returns:
     out: The Mu-Law encoded int8 data.
   """
+  
   out = tf.sign(x) * tf.log(1 + mu * tf.abs(x)) / np.log(1 + mu)
+  out = tf.clip_by_value(x, -1, 0.999)
   out = tf.floor(out * 128)
   if int8:
     out = tf.cast(out, tf.int8)

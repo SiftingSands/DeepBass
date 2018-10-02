@@ -41,7 +41,7 @@ tf.app.flags.DEFINE_integer("ps_tasks", 0,
 tf.app.flags.DEFINE_integer("total_batch_size", 1,
                             "Batch size spread across all sync replicas."
                             "We use a size of 32.")
-tf.app.flags.DEFINE_string("logdir", "/tmp/nsynth",
+tf.app.flags.DEFINE_string("logdir", "/home/ubuntu/nsynth_train",
                            "The log directory for this experiment.")
 tf.app.flags.DEFINE_string("train_path", "", "The path to the train tfrecord.")
 tf.app.flags.DEFINE_string("log", "INFO",
@@ -55,7 +55,7 @@ def main(unused_argv=None):
   if FLAGS.config is None:
     raise RuntimeError("No config name specified.")
 
-  config = utils.get_module("wavenet." + FLAGS.config).Config(
+  config = utils.get_module(FLAGS.config).Config(
       FLAGS.train_path)
 
   logdir = FLAGS.logdir
@@ -106,17 +106,18 @@ def main(unused_argv=None):
           variable_averages=ema,
           variables_to_average=tf.trainable_variables())
 
-      train_op = opt.minimize(
+      # Changed per https://github.com/tensorflow/magenta/issues/853
+      train_op = slim.learning.create_train_op(
           loss,
+          opt,
           global_step=global_step,
-          name="train",
           colocate_gradients_with_ops=True)
 
       session_config = tf.ConfigProto(allow_soft_placement=True)
 
       is_chief = (FLAGS.task == 0)
       local_init_op = opt.chief_init_op if is_chief else opt.local_step_init_op
-
+      
       slim.learning.train(
           train_op=train_op,
           logdir=logdir,
@@ -128,7 +129,7 @@ def main(unused_argv=None):
           local_init_op=local_init_op,
           save_interval_secs=300,
           sync_optimizer=opt,
-          session_config=session_config,)
+          session_config=session_config)
 
 
 if __name__ == "__main__":
