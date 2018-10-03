@@ -9,6 +9,8 @@ import errno
 
 """Main script to perform cross fading between two songs using low-dimensional
    embeddings created from the NSynth Wavenet autoencoder.
+   
+See CreateConfig.py for input details.
 
 """
 
@@ -20,11 +22,11 @@ if not os.path.exists(config_path):
     from configs.CreateConfig import createconfig
     createconfig(config_path)
 
-# Load config pile and make namespace less bulky
+# Load config file and make namespace less bulky
 config.read(config_path)
 sr = config.getint('DEFAULT','samplingrate')
-fade_style = config['XFade Settings']['Style']
-fade_time = config.getfloat('XFade Settings','Time')
+fade_style = config['NSynth XFade Settings']['Style']
+fade_time = config.getfloat('NSynth XFade Settings','Time')
 t_snip = config.getfloat('Preprocess','SR window duration')
 FirstSong = config['IO']['FirstSong']
 SecondSong = config['IO']['SecondSong']
@@ -32,10 +34,6 @@ load_dir = config['IO']['Load Directory']
 save_dir = config['IO']['Save Directory']
 savename = config['IO']['Save Name']
 modelweights_path = config['IO']['Model Weights']
-
-# Alphabetical order for now and ignore subdirectories
-playlist_order = [f for f in os.listdir(load_dir) if \
-                  os.path.isfile(os.path.join(load_dir, f))]
 
 # number of samples for fade
 fade_length = int(fade_time * sr)
@@ -56,7 +54,7 @@ if not os.path.exists(save_dir):
         if exc.errno != errno.EEXIST:
             raise
 
-# Create transition
+# Create transition and save the result
 xfade_audio, x1_trim, x2_trim, enc1, enc2 = NSynth(FirstSong,
                                                    SecondSong,
                                                    fade_style,
@@ -69,6 +67,6 @@ xfade_audio, x1_trim, x2_trim, enc1, enc2 = NSynth(FirstSong,
 np.save('begin_enc' + '.npy', enc1)
 np.save('end_enc' + '.npy', enc2)
 
-# Save mu encoded trim segments for reference
+# Save trimmed segments for reference
 Save(save_dir, 'end.wav', x1_trim, sr)
 Save(save_dir, 'begin.wav', x2_trim, sr)

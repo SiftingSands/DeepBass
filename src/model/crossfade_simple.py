@@ -42,6 +42,8 @@ def Crossfade_Simple(FirstSong, SecondSong, Ramp, fade_length):
         # Fade both trims again with a linear ramp
         x1_trim_faded = x1_trim_faded*np.linspace(1, 0, len(x1_trim))
         x2_trim_faded = x2_trim_faded*np.linspace(0, 1, len(x2_trim))
+    else:
+        TypeError('Invalid ramp function specified.')
         
     # Mixed audio
     mix = x1_trim_faded + x2_trim_faded

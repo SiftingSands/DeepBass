@@ -67,7 +67,7 @@ parser.add_argument('-sr', default=16000, help='Specify sampling rate for audio'
                     type=int)
 parser.add_argument('-duration_thresh', default=1000, help='Maximum number of \
                     seconds per audio file.', type=float)
-parser.add_argument('-n_cpu', default=1, help='Number of CPU cores to use.',
+parser.add_argument('-n_cpu', default=1, help='Number of CPU threads to use.',
                     type=int)
 args = parser.parse_args()
 
