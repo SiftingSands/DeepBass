@@ -5,8 +5,10 @@ import numpy as np
 import errno
 from preprocess.SilenceRemoval import SR
 from preprocess.np_to_tfrecords import np_to_tfrecords
+from preprocess.get_time import get_time
 from os import listdir
 from os.path import isfile, join
+from joblib import Parallel, delayed
 
 ###############################################################################
 # Directory fault checking
@@ -23,12 +25,30 @@ def is_dir(dirname):
     else:
         return dirname
 ###############################################################################
+def Prep(fname, load_dir, sr, duration_thresh, sample_length, crop_style):
+    # Remove very long, short, or corrupt audio files.
+    # Don't want remixes of a lot of songs.
+    duration = get_time(load_dir, fname)
+    if duration >= duration_thresh or duration == False:
+        return None
+    elif duration < sample_length*3/sr: # give ourselves some buffer with x3
+        return None
+    else:
+        # Load audio only for valid files
+        Data = []
+        audio, _ = Load(load_dir, fname, sr, verbose=False)
+        if crop_style == 'BegEnd':
+            begin_audio = SR(audio, 'begin')[0:sample_length]
+            end_audio = SR(audio, 'end')[-sample_length:]
+            Data.append(begin_audio)
+            Data.append(end_audio)
+        return (Data)
+###############################################################################
 """Script to load in training/validation/test data, preprocess, and convert to
 tfrecords format for training the NSynth model.
 
 Example : 
-python DataPrep.py ~/DeepBass/data/raw/EDM_Test 4 \
-~/DeepBass/data/preprocessed/EDM_Test example
+python DataPrep.py ~/Data/EDM/ 4 ~/DeepBass/data/preprocessed/EDM/ EDM -n_cpu=72
 
 """
 
@@ -45,6 +65,10 @@ parser.add_argument('-crop_style', help='Method for temporal cropping',
                     choices=['BegEnd', 'Middle'], default='BegEnd')
 parser.add_argument('-sr', default=16000, help='Specify sampling rate for audio',
                     type=int)
+parser.add_argument('-duration_thresh', default=1000, help='Maximum number of \
+                    seconds per audio file.', type=float)
+parser.add_argument('-n_cpu', default=1, help='Number of CPU cores to use.',
+                    type=int)
 args = parser.parse_args()
 
 filenames = [f for f in listdir(args.load_dir) if isfile(join(args.load_dir,
@@ -53,15 +77,20 @@ filenames = [f for f in listdir(args.load_dir) if isfile(join(args.load_dir,
 # Number of samples to export
 sample_length = int(args.time * args.sr)
 Data = []
-for fname in filenames:
-    # Load Audio
-    audio, _ = Load(args.load_dir, fname, args.sr)
-    if args.crop_style == 'BegEnd':
-        begin_audio = SR(audio, 'begin')[0:sample_length]
-        end_audio = SR(audio, 'end')[-sample_length:]
-        Data.append(begin_audio)
-        Data.append(end_audio)
-        
+Data = Parallel(n_jobs=args.n_cpu)(delayed(Prep)(fname, 
+                                                 args.load_dir, 
+                                                 args.sr,
+                                                 args.duration_thresh, 
+                                                 sample_length, 
+                                                 args.crop_style) \
+                                                 for fname in filenames)
+# Remove audio snippets that returned None
+Data = [x for x in Data if x is not None]
+# Merge everything into one list from a list of lists
+Data = [item for sublist in Data for item in sublist]
+# Remove empty lists
+Data = [x for x in Data if x != []]
+
 # Create the save folder if it does not exist
 if not os.path.exists(args.save_dir):
     try:
@@ -71,4 +100,4 @@ if not os.path.exists(args.save_dir):
             raise
 
 os.chdir(args.save_dir) # Move directory for saving
-np_to_tfrecords(np.array(Data), None, args.savename, verbose=True)
+np_to_tfrecords(np.stack(Data), None, args.savename, verbose=True)
