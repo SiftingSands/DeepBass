@@ -64,14 +64,17 @@ if not os.path.exists(save_dir):
             raise
 
 # Create cross fading
-fade, x1_trim_faded, x2_trim_faded = Crossfade_Simple(FirstSong, 
-                                                      SecondSong, 
-                                                      fade_style,
-                                                      fade_length)
+fade, x1_trim_faded, x2_trim_faded, x1_trim, x2_trim = Crossfade_Simple( \
+                                                       FirstSong, 
+                                                       SecondSong, 
+                                                       fade_style,
+                                                       fade_length)
 
 # Save faded and trimmed segments for reference
 Save(save_dir, 'end_faded.wav', x1_trim_faded, sr)
 Save(save_dir, 'begin_faded.wav', x2_trim_faded, sr)
+Save(save_dir, 'end_trim.wav', x1_trim, sr)
+Save(save_dir, 'begin_trim.wav', x2_trim, sr)
 
 # Save combined cross faded audio
-Save(save_dir, savename+'.wav', fade, sr)
+Save(save_dir, savename+'_simple.wav', fade, sr)

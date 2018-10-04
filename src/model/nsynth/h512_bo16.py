@@ -20,9 +20,9 @@ from __future__ import print_function
 # internal imports
 from six.moves import range  # pylint: disable=redefined-builtin
 import tensorflow as tf
-import reader
-import utils
-import masked
+from model.nsynth import reader
+from model.nsynth import utils
+from model.nsynth import masked
 
 
 class FastGenerationConfig(object):
@@ -141,15 +141,16 @@ class Config(object):
   """Configuration object that helps manage the graph."""
 
   def __init__(self, train_path=None):
-    self.num_iters = 240000
+    self.num_iters = 320000
     self.learning_rate_schedule = {
-        0: 2e-4,
-        90000: 4e-4 / 3,
-        120000: 6e-5,
-        150000: 4e-5,
-        180000: 2e-5,
-        210000: 6e-6,
-        240000: 2e-6,
+        0 : 2e-4,
+        200000: 2e-4,
+        290000: 4e-4 / 3,
+        320000: 6e-5,
+        350000: 4e-5,
+        380000: 2e-5,
+        410000: 6e-6,
+        440000: 2e-6,
     }
     self.ae_hop_length = 512
     self.ae_bottleneck_width = 16

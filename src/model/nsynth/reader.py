@@ -21,7 +21,7 @@ from __future__ import print_function
 import numpy as np
 import tensorflow as tf
 
-from magenta.models.nsynth import utils
+from model.nsynth import utils
 
 
 # FFT Specgram Shapes

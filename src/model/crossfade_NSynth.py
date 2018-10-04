@@ -1,5 +1,5 @@
 import numpy as np
-from magenta.models.nsynth.wavenet import fastgen
+from .nsynth import fastgen
 import time
 import os
 import librosa

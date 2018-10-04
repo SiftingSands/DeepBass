@@ -79,8 +79,8 @@ def mu_law(x, mu=255, int8=False):
     out: The Mu-Law encoded int8 data.
   """
   
+  x = tf.clip_by_value(x, -1, 0.999)
   out = tf.sign(x) * tf.log(1 + mu * tf.abs(x)) / np.log(1 + mu)
-  out = tf.clip_by_value(x, -1, 0.999)
   out = tf.floor(out * 128)
   if int8:
     out = tf.cast(out, tf.int8)

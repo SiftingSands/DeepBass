@@ -48,4 +48,4 @@ def Crossfade_Simple(FirstSong, SecondSong, Ramp, fade_length):
     # Mixed audio
     mix = x1_trim_faded + x2_trim_faded
     
-    return mix, x1_trim_faded, x2_trim_faded
+    return mix, x1_trim_faded, x2_trim_faded, x1_trim, x2_trim

@@ -61,7 +61,7 @@ xfade_audio, x1_trim, x2_trim, enc1, enc2 = NSynth(FirstSong,
                                                    fade_length,
                                                    modelweights_path,
                                                    save_dir,
-                                                   savename)
+                                                   savename+'_NSynth')
 
 # Save encodings of the audio
 np.save('begin_enc' + '.npy', enc1)

@@ -23,7 +23,7 @@ set to 1. For training in 200k iterations, they both should be 32.
 
 # internal imports
 import tensorflow as tf
-import utils
+from model.nsynth import h512_bo16
 
 slim = tf.contrib.slim
 FLAGS = tf.app.flags.FLAGS
@@ -55,8 +55,7 @@ def main(unused_argv=None):
   if FLAGS.config is None:
     raise RuntimeError("No config name specified.")
 
-  config = utils.get_module(FLAGS.config).Config(
-      FLAGS.train_path)
+  config = h512_bo16.Config(FLAGS.train_path)
 
   logdir = FLAGS.logdir
   tf.logging.info("Saving to %s" % logdir)
