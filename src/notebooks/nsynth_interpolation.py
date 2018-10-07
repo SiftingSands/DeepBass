@@ -7,8 +7,10 @@ import sys
 # Change path back to /src to load other modules
 sys.path.insert(0, '/home/ubuntu/DeepBass/src')
 from ingestion.IO_utils import Load, Save
+from preprocess.SilenceRemoval import SR
 import streamlit as st
 import time
+import math
 
 ###############################################################################
 
@@ -19,7 +21,7 @@ def LinearFade(length):
 ###############################################################################
     
 def HannFade(length):
-    fadein = (0.5 * (1.0 - np.cos(3.1415 * np.arange(length) / 
+    fadein = (0.5 * (1.0 - np.cos(math.pi * np.arange(length) / 
                                   float(length)))).reshape(1, -1, 1)
     return fadein
 
@@ -63,47 +65,52 @@ Notes:
 """
 
 # Directory where mp3 are stored.
-AUDIO_DIR = '/home/ubuntu/DeepBass/data/raw/EDM_Test'
+AUDIO_DIR = '/home/ubuntu/test'
 filenames = [f for f in listdir(AUDIO_DIR) if isfile(join(AUDIO_DIR, f))]
 
 sr = 16000
 # magenta also uses librosa for loading
-x1, _ = Load(AUDIO_DIR, filenames[0], sr=sr)
-x2, _ = Load(AUDIO_DIR, filenames[1], sr=sr)
+FirstSong_fname = filenames[1]
+SecondSong_fname = filenames[0]
+FirstSong, _ = Load(AUDIO_DIR, FirstSong_fname , sr=sr)
+SecondSong, _ = Load(AUDIO_DIR, SecondSong_fname, sr=sr)
 
-# Take the last n seconds
-t_len = 4
-silence_len1 = 11 # Skip the near silent part of the ending
-x1 = x1[:-silence_len1*sr]
-x1 = x1[-sr*t_len:]
+# Remove any silence at the end of the first song
+# and the beginning of the second song
+t_snip = 30 # interrogation length in seconds
+end_index = SR(FirstSong, 'end', t_snip=t_snip)
+end_index = int(t_snip*sr - end_index) # change index reference frame
+start_index = SR(SecondSong, 'begin', t_snip=t_snip)
+FirstSong = FirstSong[:-end_index]
+SecondSong = SecondSong[start_index:]
 
-silence_len2 = 1
-x2 = x2[silence_len2*sr:]
-x2 = x2[:t_len*sr]
-
-sample_length = x1.shape[0]
+# Trim to t_len seconds
+t_len = 5
+sample_length = t_len*sr
+FirstSong_end = FirstSong[-sample_length:]
+SecondSong_begin = SecondSong[0:sample_length]
 
 # Plot PCM of both snippets
 fig, axs = plt.subplots(2, 1, figsize=(10, 5))
-axs[0].plot(x1)
+axs[0].plot(FirstSong_end)
 axs[0].set_title('First Song')
-axs[1].plot(x2)
+axs[1].plot(SecondSong_begin)
 axs[1].set_title('Second Song')
 st.pyplot()
 
 # Save original snippets
 output_dir = '/home/ubuntu/DeepBass/src/notebooks/'
-output_name1 = 'original_' + filenames[0] + '.wav'
-Save(output_dir, output_name1, x1, sr)
-output_name2 = 'original_' + filenames[1] + '.wav'
-Save(output_dir, output_name2, x2, sr)
+output_name1 = 'originalend_' + FirstSong_fname + '.wav'
+Save(output_dir, output_name1, FirstSong_end, sr)
+output_name2 = 'originalbegin_' + SecondSong_fname + '.wav'
+Save(output_dir, output_name2, SecondSong_begin, sr)
 
 model_dir = '/home/ubuntu/DeepBass/src/notebooks/wavenet-ckpt/model.ckpt-200000'
 
 # Create encodings
 start = time.time()
-enc1 = fastgen.encode(x1, model_dir, sample_length)
-enc2 = fastgen.encode(x2, model_dir, sample_length)
+enc1 = fastgen.encode(FirstSong_end, model_dir, sample_length)
+enc2 = fastgen.encode(SecondSong_begin, model_dir, sample_length)
 end = time.time()
 st.write('Encoding took ' + str((end-start)) + ' seconds')
 
@@ -124,16 +131,16 @@ start = time.time()
 @st.cache
 def synth():
     fastgen.synthesize(xfade_encoding, checkpoint_path = model_dir, 
-                       save_paths=['enc_' + fade_type + '_' + filenames[0] + \
-                                   filenames[1]], 
+                       save_paths=['enc_' + fade_type + '_' + FirstSong_fname + \
+                                   SecondSong_fname], 
                        samples_per_save=sample_length)
     return None
 synth()
 end = time.time()
 st.write('Decoding took ' + str((end-start)) + ' seconds')
 
-xfade_audio, _ = Load(output_dir, 'enc_' + fade_type + '_' + filenames[0] + \
-                               filenames[1], sr=sr)
+xfade_audio, _ = Load(output_dir, 'enc_' + fade_type + '_' + FirstSong_fname + \
+                      SecondSong_fname, sr=sr)
 fig, ax = plt.subplots(figsize=(10, 7))
 ax.plot(xfade_audio)
 ax.set_title('Crossfaded audio')
