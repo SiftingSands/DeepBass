@@ -2,6 +2,7 @@ import os
 import argparse
 from ingestion.IO_utils import Load, Save
 from model.crossfade_simple import Crossfade_Simple
+from analysis.timbral_measures import timbral_measures
 import errno
 import configparser
 import sys
@@ -78,3 +79,8 @@ Save(save_dir, 'begin_trim.wav', x2_trim, sr)
 
 # Save combined cross faded audio
 Save(save_dir, savename+'_simple.wav', fade, sr)
+
+# Evaluate roughness of the cross fade
+roughness = timbral_measures(os.path.join(save_dir,savename+'_simple.wav'),\
+                             'Timbral_Roughness')
+print('Crossfade had a roughness of %.2f' % roughness)

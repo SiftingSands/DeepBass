@@ -27,7 +27,7 @@ def is_dir(dirname):
 ###############################################################################
 def Prep(fname, load_dir, sr, duration_thresh, sample_length, crop_style):
     # Remove very long, short, or corrupt audio files.
-    # Don't want remixes of a lot of songs.
+    # Don't want remixes of a lot of songs (typically long audio files).
     duration = get_time(load_dir, fname)
     if duration >= duration_thresh or duration == False:
         return None
@@ -62,7 +62,7 @@ parser.add_argument('save_dir', help='Directory to save processed audio files',
 parser.add_argument('savename', help='Specify the name of the tfrecords file',
                     type=str)
 parser.add_argument('-crop_style', help='Method for temporal cropping', 
-                    choices=['BegEnd', 'Middle'], default='BegEnd')
+                    choices=['BegEnd'], default='BegEnd')
 parser.add_argument('-sr', default=16000, help='Specify sampling rate for audio',
                     type=int)
 parser.add_argument('-duration_thresh', default=1000, help='Maximum number of \
