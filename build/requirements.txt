@@ -1,0 +1,14 @@
+essentia==2.1b5.dev416
+joblib==0.12.5
+librosa==0.6.2
+matplotlib==3.0.0
+numpy==1.14.5
+scikit-learn==0.19.2
+scipy==1.1.0
+six==1.11.0
+sklearn==0.0
+SoundFile==0.10.2
+streamlit==0.15.4
+tensorflow-gpu==1.10.1
+timbral-models==0.2.2
+
