@@ -1,30 +1,23 @@
 # Deep Bass
-Automated and intelligent fading between subsequent songs.
-
-## Motivation for this project format:
-- **src** : Put all source code for production within structured directory
-- **tests** : Put all source code for testing in an easy to find location
-- **configs** : Enable modification of all preset variables within single directory (consisting of one or many config files for separate tasks)
-- **data** : Include example a small amount of data in the Github repository so tests can be run to validate installation
-- **build** : Include scripts that automate building of a standalone environment
-- **static** : Any images or content to include in the README or web framework if part of the pipeline
+Automatic content driven cross fading between subsequent songs using a Wavenet autoencoder following the Magenta NSynth model (https://magenta.tensorflow.org/nsynth).
 
 ## Setup
 Clone repository and update python path
 ```
-repo_name=Insight_Project_Framework # URL of your new repository
-username=mrubash1 # Username for your personal github account
+repo_name=DeepBass 
+username=SiftingSands
 git clone https://github.com/$username/$repo_name
 cd $repo_name
 echo "export $repo_name=${PWD}" >> ~/.bash_profile
 echo "export PYTHONPATH=$repo_name/src:${PYTHONPATH}" >> ~/.bash_profile
 source ~/.bash_profile
 ```
-Create new development branch and switch onto it
+Install dependent packages. "timbral_models" needed to be installed from source.
 ```
-branch_name=dev-readme_requisites-20180905 # Name of development branch, of the form 'dev-feature_name-date_of_creation'}}
-git checkout -b $branch_name
-git push origin $branch_name
+pip install -r /<path>/DeepBass/build/requirements.txt
+git clone https://github.com/AudioCommons/timbral_models.git
+cd timbral_models
+pip install .
 ```
 
 ## Requisites
@@ -32,71 +25,73 @@ git push origin $branch_name
 - 'librosa'
 - 'streamlit'
 - 'matplotlib'
+- 'tensorflow-gpu'
+- 'timbral_models'
+- 'soundfile'
+- 'scipy'
+- 'sklearn'
+- 'essentia'
+- 'joblib'
 
-## Build Environment
-- Include instructions of how to launch scripts in the build subfolder
-- Build scripts can include shell scripts or python setup.py files
-- The purpose of these scripts is to build a standalone environment, for running the code in this repository
-- The environment can be for local use, or for use in a cloud environment
-- If using for a cloud environment, commands could include CLI tools from a cloud provider (i.e. gsutil from Google Cloud Platform)
+## Example 'config.ini'
 ```
-# Example
+[DEFAULT]
+samplingrate = 16000
 
-# Step 1
-# Step 2
-```
+[NSynth XFade Settings]
+Style = LinearFade
+time = 4
 
-## Configs
-- We recommond using either .yaml or .txt for your config files, not .json
-- **DO NOT STORE CREDENTIALS IN THE CONFIG DIRECTORY!!**
-- If credentials are needed, use environment variables or HashiCorp's [Vault](https://www.vaultproject.io/)
+[Simple XFade Settings]
+Style = Linear
+time = 4
 
+[Preprocess]
+SR window duration = 30
 
-## Test
-- Include instructions for how to run all tests after the software is installed
-```
-# Example
-
-# Step 1
-# Step 2
-```
-
-## Run Inference
-- Include instructions on how to run inference
-- i.e. image classification on a single image for a CNN deep learning project
-```
-# Example
-
-# Step 1
-# Step 2
+[IO]
+firstsong = Song1.mp3
+secondsong = Song2.mp3
+load directory = /home/ubuntu/DeepBass/data/raw/Exp6
+save directory = /home/ubuntu/DeepBass/data/processed/Exp6_Retrained
+save name = Exp6
+model weights = /home/ubuntu/nsynth_train/model.ckpt-320000
 ```
 
-## Build Model
-- Include instructions of how to build the model
-- This can be done either locally or on the cloud
+## Run Simple Cross Fading
+- Create a 'config.ini' either manually or by editing and running '/configs/CreatConfig.py'
+1. Loads the first and second songs per the 'load directory', 'firstsong', and 'secondsong' in the config.ini
+2. Detects if the ending and beginning has silence within a 'SR window duration' in seconds
+3. Trims the audio to 'time' length (seconds) snippets under 'Simple XFade Settings'
+4. Applys a linear crossfade between the beginning and ending snippets (different crossfade ramping functions are available)
+5. Saves the crossfaded audio file per 'save name' and 'save directory'
 ```
-# Example
-
-# Step 1
-# Step 2
-```
-
-## Serve Model
-- Include instructions of how to set up a REST or RPC endpoint 
-- This is for running remote inference via a custom model
-```
-# Example
-
-# Step 1
-# Step 2
+cd ~/DeepBass/src
+python main_simple.py
 ```
 
-## Analysis
-- Include some form of EDA (exploratory data analysis)
-- And/or include benchmarking of the model and results
+## Run NSynth Cross Fading
+- Create a 'config.ini' either manually or by editing and running '/configs/CreatConfig.py'
+1. Loads the first and second songs per the 'load directory', 'firstsong', and 'secondsong' in the config.ini
+2. Detects if the ending and beginning has silence within a 'SR window duration' in seconds
+3. Trims the audio to 'time' length (seconds) snippets under 'NSynth XFade Settings'
+4. Load the weights for the neural network from 'model weights'
+5. Calculate encoding from the audio snippets
+6. Combine both encodings
+7. Synthesize mixed audio from encoding
+8. Saves the crossfaded audio file per 'save name' and 'save directory'
 ```
-# Example
+cd ~/DeepBass/src
+python main_NSynth.py
+```
 
-# Step 1
-# Step 2
+## Train the model from a checkpoint
+1. Create a folder with all of the audio examples that you want to train on
+2. Download previous checkpoint for the model (for example http://download.magenta.tensorflow.org/models/nsynth/wavenet-ckpt.tar)
+3. Trim the beginning and endings of the songs and convert the data to the 'tfrecords' format
+4. Run the training script with the path to the training data and model checkpoint. Currently no multi-GPU capability, see https://github.com/tensorflow/magenta/issues/625
+```
+cd ~/DeepBass/src
+python DataPrep.py -load_dir=<path-to-audio-files> -time=4 -save_dir=<path-typically-in-/DeepBass/Data/preprocessed> -savename=<name-for-tfrecords-file> -n_cpu=<number-of-cpu-threads>
+python train.py --train_path=<path-to-tfrecords> --total_batch_size=6 --logdir=<path-to-checkpoint>
 ```
