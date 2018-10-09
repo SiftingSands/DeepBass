@@ -2,6 +2,7 @@ import os
 from ingestion.IO_utils import Load, Save
 from model.crossfade_NSynth import NSynth
 from preprocess.SilenceRemoval import SR
+from analysis.timbral_measures import timbral_measures
 import sys
 import numpy as np
 import configparser
@@ -70,3 +71,8 @@ np.save('end_enc' + '.npy', enc2)
 # Save trimmed segments for reference
 Save(save_dir, 'end.wav', x1_trim, sr)
 Save(save_dir, 'begin.wav', x2_trim, sr)
+
+# Evaluate roughness of the cross fade
+roughness = timbral_measures(os.path.join(save_dir,savename+'_NSynth.wav'),\
+                             'Timbral_Roughness')
+print('Crossfade had a roughness of %.2f' % roughness)

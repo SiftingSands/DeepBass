@@ -27,7 +27,7 @@ def is_dir(dirname):
 ###############################################################################
 def Prep(fname, load_dir, sr, duration_thresh, sample_length, crop_style):
     # Remove very long, short, or corrupt audio files.
-    # Don't want remixes of a lot of songs.
+    # Don't want remixes of a lot of songs (typically long audio files).
     duration = get_time(load_dir, fname)
     if duration >= duration_thresh or duration == False:
         return None
@@ -53,16 +53,16 @@ python DataPrep.py ~/Data/EDM/ 4 ~/DeepBass/data/preprocessed/EDM/ EDM -n_cpu=72
 """
 
 parser = argparse.ArgumentParser(description='Load Audio Files')
-parser.add_argument('load_dir', help='Directory of audio files', 
-                    action=FullPaths, type=is_dir)
-parser.add_argument('time', help='Specify the amount of time to crop to',
-                    type=float)
-parser.add_argument('save_dir', help='Directory to save processed audio files',
-                    type=str)
-parser.add_argument('savename', help='Specify the name of the tfrecords file',
-                    type=str)
+parser.add_argument('-load_dir', help='Directory of audio files', 
+                    action=FullPaths, type=is_dir, required=True)
+parser.add_argument('-time', help='Specify the amount of time to crop to',
+                    type=float, required=True)
+parser.add_argument('-save_dir', help='Directory to save processed audio files',
+                    type=str, required=True)
+parser.add_argument('-savename', help='Specify the name of the tfrecords file',
+                    type=str, required=True)
 parser.add_argument('-crop_style', help='Method for temporal cropping', 
-                    choices=['BegEnd', 'Middle'], default='BegEnd')
+                    choices=['BegEnd'], default='BegEnd')
 parser.add_argument('-sr', default=16000, help='Specify sampling rate for audio',
                     type=int)
 parser.add_argument('-duration_thresh', default=1000, help='Maximum number of \
@@ -70,6 +70,14 @@ parser.add_argument('-duration_thresh', default=1000, help='Maximum number of \
 parser.add_argument('-n_cpu', default=1, help='Number of CPU threads to use.',
                     type=int)
 args = parser.parse_args()
+
+# Create the save folder if it does not exist
+if not os.path.exists(args.save_dir):
+    try:
+        os.makedirs(args.save_dir)
+    except OSError as exc: # Guard against race condition
+        if exc.errno != errno.EEXIST:
+            raise
 
 filenames = [f for f in listdir(args.load_dir) if isfile(join(args.load_dir,
              f))]
@@ -90,14 +98,6 @@ Data = [x for x in Data if x is not None]
 Data = [item for sublist in Data for item in sublist]
 # Remove empty lists
 Data = [x for x in Data if x != []]
-
-# Create the save folder if it does not exist
-if not os.path.exists(args.save_dir):
-    try:
-        os.makedirs(args.save_dir)
-    except OSError as exc: # Guard against race condition
-        if exc.errno != errno.EEXIST:
-            raise
 
 os.chdir(args.save_dir) # Move directory for saving
 np_to_tfrecords(np.stack(Data), None, args.savename, verbose=True)

@@ -1,7 +1,7 @@
 from mutagen.mp3 import MP3
 import os
 
-"""Silence detection based on the amplitude RMS
+"""Get the duration of the audio file
 
 Parameters:
     fname (str) : File name for the audio file
