@@ -59,7 +59,7 @@ model weights = /home/ubuntu/nsynth_train/model.ckpt-320000
 ```
 
 ## Run Simple Cross Fading
-- Create a 'config.ini' either manually or by editing and running '/configs/CreatConfig.py'
+- Create a 'config.ini' either manually or by editing and running '/configs/CreateConfig.py'
 1. Loads the first and second songs per the 'load directory', 'firstsong', and 'secondsong' in the config.ini
 2. Detects if the ending and beginning has silence within a 'SR window duration' in seconds
 3. Trims the audio to 'time' length (seconds) snippets under 'Simple XFade Settings'
@@ -71,7 +71,7 @@ python main_simple.py
 ```
 
 ## Run NSynth Cross Fading
-- Create a 'config.ini' either manually or by editing and running '/configs/CreatConfig.py'
+- Create a 'config.ini' either manually or by editing and running '/configs/CreateConfig.py'
 1. Loads the first and second songs per the 'load directory', 'firstsong', and 'secondsong' in the config.ini
 2. Detects if the ending and beginning has silence within a 'SR window duration' in seconds
 3. Trims the audio to 'time' length (seconds) snippets under 'NSynth XFade Settings'
