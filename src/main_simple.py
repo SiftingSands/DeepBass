@@ -7,32 +7,27 @@ import errno
 import configparser
 import sys
 
-###############################################################################
-# Directory fault checking
-class FullPaths(argparse.Action):
-    """Expand user- and relative-paths"""
-    def __call__(self, parser, namespace, values, option_string=None):
-        setattr(namespace, self.dest, os.path.abspath(os.path.expanduser(values)))
-
-def is_dir(dirname):
-    """Checks if a path is an actual directory"""
-    if not os.path.isdir(dirname):
-        msg = "{0} is not a directory".format(dirname)
-        raise argparse.ArgumentTypeError(msg)
-    else:
-        return dirname
-###############################################################################
 """Main script to perform cross fading between two songs using ramp functions
 applied in the raw audio (PCM) domain.
 
-See CreateConfig.py for input details.
+Give the config file name as the input or let it be generated from the 
+CreateConfig.py script. See CreateConfig.py for input descriptions.
+
+Ex : python main_simple.py config.ini
 
 """
 
+parser = argparse.ArgumentParser(description='Load Audio Files')
+parser.add_argument('config_fname', default='config.ini',
+                    help='Config file name. Must be in /configs/', 
+                    type=str)
+args = parser.parse_args()
+
 config = configparser.ConfigParser()
-config_path = '../configs/config.ini'
+config_path = os.path.join('../configs', args.config_fname)
 # Create config if it does not exist
 if not os.path.exists(config_path):
+    print('Creating config file...')
     sys.path.insert(0, '../') # Navigate to config folder
     from configs.CreateConfig import createconfig
     createconfig(config_path)
@@ -50,7 +45,7 @@ save_dir = config['IO']['Save Directory']
 savename = config['IO']['Save Name']
 
 # Number of samples for fade
-fade_length = int(fade_time * sr) 
+fade_length = int(fade_time * sr)
 
 # Load Songs
 FirstSong,_ = Load(load_dir, FirstSong, sr)
@@ -80,7 +75,9 @@ Save(save_dir, 'begin_trim.wav', x2_trim, sr)
 # Save combined cross faded audio
 Save(save_dir, savename+'_simple.wav', fade, sr)
 
-# Evaluate roughness of the cross fade
+# Evaluate roughness of the cross fade and save value to txt file
 roughness = timbral_measures(os.path.join(save_dir,savename+'_simple.wav'),\
                              'Timbral_Roughness')
-print('Crossfade had a roughness of %.2f' % roughness)
+textfilepath = os.path.join(save_dir, savename+'_simple_roughness.txt')
+with open(textfilepath, 'w') as f:
+    f.write('%f' % roughness)
