@@ -1,7 +1,22 @@
 # Deep Bass
 Automatic content driven cross fading between subsequent songs using a Wavenet autoencoder following the Magenta NSynth model (https://magenta.tensorflow.org/nsynth).
 
-## Setup
+Table of contents
+=================
+
+<!--ts-->
+   * [Table of contents](#table-of-contents)
+   * [Setup](#setup)
+   * [Requisites](#requisites)
+   * [Usage](#usage)
+      * [Config File](#example-config-file)
+      * [Simple Cross Fading](#run-simple-cross-fading)
+      * [NSynth Cross Fading](#run-nsynth-cross-fading)
+      * [Training](#train-the-model-from-a-checkpoint)
+<!--te-->
+
+Setup
+=====
 Clone repository and update python path
 ```
 repo_name=DeepBass 
@@ -20,7 +35,8 @@ cd timbral_models
 pip install .
 ```
 
-## Requisites
+Requisites
+=====
 - 'numpy'
 - 'librosa'
 - 'streamlit'
@@ -33,7 +49,11 @@ pip install .
 - 'essentia'
 - 'joblib'
 
-## Example 'config.ini'
+Usage
+=====
+
+Example config file
+-----
 ```
 [DEFAULT]
 samplingrate = 16000
@@ -58,8 +78,9 @@ save name = Exp6
 model weights = /home/ubuntu/nsynth_train/model.ckpt-320000
 ```
 
-## Run Simple Cross Fading
-- Create a 'config.ini' either manually or by editing and running '/configs/CreateConfig.py'
+Run Simple Cross Fading
+-----
+- Create a 'config.ini' either manually (place in /configs/) or by editing and running '/configs/CreateConfig.py'
 1. Loads the first and second songs per the 'load directory', 'firstsong', and 'secondsong' in the config.ini
 2. Detects if the ending and beginning has silence within a 'SR window duration' in seconds
 3. Trims the audio to 'time' length (seconds) snippets under 'Simple XFade Settings'
@@ -70,8 +91,9 @@ cd ~/DeepBass/src
 python main_simple.py
 ```
 
-## Run NSynth Cross Fading
-- Create a 'config.ini' either manually or by editing and running '/configs/CreateConfig.py'
+Run NSynth Cross Fading
+-----
+- Create a 'config.ini' either manually (place in /configs/) or by editing and running '/configs/CreateConfig.py'
 1. Loads the first and second songs per the 'load directory', 'firstsong', and 'secondsong' in the config.ini
 2. Detects if the ending and beginning has silence within a 'SR window duration' in seconds
 3. Trims the audio to 'time' length (seconds) snippets under 'NSynth XFade Settings'
@@ -85,7 +107,8 @@ cd ~/DeepBass/src
 python main_NSynth.py
 ```
 
-## Train the model from a checkpoint
+Train the model from a checkpoint
+-----
 1. Create a folder with all of the audio examples that you want to train on
 2. Download previous checkpoint for the model (for example http://download.magenta.tensorflow.org/models/nsynth/wavenet-ckpt.tar)
 3. Trim the beginning and endings of the songs and convert the data to the 'tfrecords' format
