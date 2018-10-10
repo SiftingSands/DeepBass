@@ -1,4 +1,5 @@
 import os
+import argparse
 from ingestion.IO_utils import Load, Save
 from model.crossfade_NSynth import NSynth
 from preprocess.SilenceRemoval import SR
@@ -11,12 +12,21 @@ import errno
 """Main script to perform cross fading between two songs using low-dimensional
    embeddings created from the NSynth Wavenet autoencoder.
    
-See CreateConfig.py for input details.
+Give the config file name as the input or let it be generated from the 
+CreateConfig.py script. See CreateConfig.py for input descriptions.
+
+Ex : python main_simple.py config.ini
 
 """
 
+parser = argparse.ArgumentParser(description='Load Audio Files')
+parser.add_argument('-config_fname', default='config.ini',
+                    help='Config file name. Must be in /configs/', 
+                    type=str)
+args = parser.parse_args()
+
 config = configparser.ConfigParser()
-config_path = '../configs/config.ini'
+config_path = os.path.join('../configs', args.config_fname)
 # Create config if it does not exist
 if not os.path.exists(config_path):
     sys.path.insert(0, '../') # Navigate to config folder
@@ -72,7 +82,9 @@ np.save('end_enc' + '.npy', enc2)
 Save(save_dir, 'end.wav', x1_trim, sr)
 Save(save_dir, 'begin.wav', x2_trim, sr)
 
-# Evaluate roughness of the cross fade
+# Evaluate roughness of the cross fade and save to text file
 roughness = timbral_measures(os.path.join(save_dir,savename+'_NSynth.wav'),\
                              'Timbral_Roughness')
-print('Crossfade had a roughness of %.2f' % roughness)
+textfilepath = os.path.join(save_dir, savename+'_nsynth_roughness.txt')
+with open(textfilepath, 'w') as f:
+    f.write('%f' % roughness)

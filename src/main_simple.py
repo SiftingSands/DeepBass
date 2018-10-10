@@ -18,7 +18,7 @@ Ex : python main_simple.py config.ini
 """
 
 parser = argparse.ArgumentParser(description='Load Audio Files')
-parser.add_argument('config_fname', default='config.ini',
+parser.add_argument('-config_fname', default='config.ini',
                     help='Config file name. Must be in /configs/', 
                     type=str)
 args = parser.parse_args()
