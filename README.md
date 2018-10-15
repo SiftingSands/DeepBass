@@ -1,5 +1,8 @@
 # Deep Bass
-Automatic content driven cross fading between subsequent songs using a Wavenet autoencoder following the Magenta NSynth model (https://magenta.tensorflow.org/nsynth).
+Automatic content driven cross fading between subsequent songs using a Wavenet autoencoder.
+
+See [presentation](http://bit.ly/2DZyzni) for additional details .
+
 
 Table of contents
 =================
@@ -7,7 +10,6 @@ Table of contents
 <!--ts-->
    * [Table of contents](#table-of-contents)
    * [Setup](#setup)
-   * [Requisites](#requisites)
    * [Usage](#usage)
       * [Config File](#example-config-file)
       * [Simple Cross Fading](#run-simple-cross-fading)
@@ -27,16 +29,16 @@ echo "export $repo_name=${PWD}" >> ~/.bash_profile
 echo "export PYTHONPATH=$repo_name/src:${PYTHONPATH}" >> ~/.bash_profile
 source ~/.bash_profile
 ```
-Install dependent packages. "timbral_models" needed to be installed from source.
+Create virtual environment. Install dependent packages from requirements.txt. "timbral_models" needed to be installed from source.
 ```
+conda create --name DeepBass (if using Anaconda, otherwise follow https://docs.python.org/3/tutorial/venv.html to create a virtual environment)
 pip install -r /<path>/DeepBass/build/requirements.txt
 git clone https://github.com/AudioCommons/timbral_models.git
 cd timbral_models
 pip install .
 ```
 
-Requisites
-=====
+## Required Packages
 - 'numpy'
 - 'librosa'
 - 'streamlit'
@@ -51,6 +53,13 @@ Requisites
 
 Usage
 =====
+
+Work flow is typically as follows:
+1. Setup the config file with the data inputs (songs) and cross fading parameters.
+2. Run the cross fading method.
+3. Evaluate the output audio. 
+4. An empirical 'roughness' measure is also calculated and output to a text file. See Section 1.5 of [timbral_models documentation](https://www.audiocommons.org/assets/files/AC-WP5-SURREY-D5.2%20First%20prototype%20of%20timbral%20characterisation%20tools%20for%20semantically%20annotating%20non-musical%20content.pdf) for details on roughness.
+5. Alternatively, a similar measure called Sethares dissonance can be calculated over the peak frequencies over time. [Example Python script.](https://gist.github.com/endolith/3066664)
 
 Example config file
 -----
@@ -88,7 +97,7 @@ Run Simple Cross Fading
 5. Saves the crossfaded audio file per 'save name' and 'save directory'
 ```
 cd ~/DeepBass/src
-python main_simple.py
+python main_simple.py -config_fname=<your-config-file-name>
 ```
 
 Run NSynth Cross Fading
@@ -104,7 +113,7 @@ Run NSynth Cross Fading
 8. Saves the crossfaded audio file per 'save name' and 'save directory'
 ```
 cd ~/DeepBass/src
-python main_NSynth.py
+python main_NSynth.py -config_fname=<your-config-file-name>
 ```
 
 Train the model from a checkpoint
@@ -118,3 +127,7 @@ cd ~/DeepBass/src
 python DataPrep.py -load_dir=<path-to-audio-files> -time=4 -save_dir=<path-typically-in-/DeepBass/Data/preprocessed> -savename=<name-for-tfrecords-file> -n_cpu=<number-of-cpu-threads>
 python train.py --train_path=<path-to-tfrecords> --total_batch_size=6 --logdir=<path-to-checkpoint>
 ```
+
+Model Background
+=====
+The NSynth model from Google's Magenta team was used to create the audio mixes (https://magenta.tensorflow.org/nsynth). Starting from their published checkpoint, the model was further trained on 4 second snippets from the beginning and endings of over 500 songs in the EDM genre. 

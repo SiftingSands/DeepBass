@@ -95,4 +95,4 @@ def NSynth(FirstSong, SecondSong, fade_type, fade_length, model_dir, save_dir,
     xfade_audio, _ = librosa.load(savename + '.wav')
         
     
-    return xfade_audio, x1_trim, x2_trim, enc1, enc2
+    return xfade_audio, x1_trim, x2_trim, enc1, enc2, xfade_encoding

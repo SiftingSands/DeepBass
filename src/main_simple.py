@@ -13,7 +13,7 @@ applied in the raw audio (PCM) domain.
 Give the config file name as the input or let it be generated from the 
 CreateConfig.py script. See CreateConfig.py for input descriptions.
 
-Ex : python main_simple.py config.ini
+Ex : python main_simple.py -config_fname=config.ini
 
 """
 

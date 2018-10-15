@@ -15,7 +15,7 @@ import errno
 Give the config file name as the input or let it be generated from the 
 CreateConfig.py script. See CreateConfig.py for input descriptions.
 
-Ex : python main_simple.py config.ini
+Ex : python main_simple.py -config_fname=config.ini
 
 """
 
@@ -66,13 +66,13 @@ if not os.path.exists(save_dir):
             raise
 
 # Create transition and save the result
-xfade_audio, x1_trim, x2_trim, enc1, enc2 = NSynth(FirstSong,
-                                                   SecondSong,
-                                                   fade_style,
-                                                   fade_length,
-                                                   modelweights_path,
-                                                   save_dir,
-                                                   savename+'_NSynth')
+xfade_audio, x1_trim, x2_trim, enc1, enc2, xfade_enc = NSynth(FirstSong,
+                                                        SecondSong,
+                                                        fade_style,
+                                                        fade_length,
+                                                        modelweights_path,
+                                                        save_dir,
+                                                        savename+'_NSynth')
 
 # Save encodings of the audio
 np.save('begin_enc' + '.npy', enc1)
