@@ -1,7 +1,21 @@
 # Deep Bass
-Automatic content driven cross fading between subsequent songs using a Wavenet autoencoder.
+Automatic content driven cross fading between subsequent songs using a Wavenet autoencoder (NSynth).
 
-See [presentation](http://bit.ly/2DZyzni) for additional details.
+This currently works on two audio files at a time. The ending of the first song and the beginning of the second song is isolated.
+
+[![](static/Audio_trim.pdf)]
+
+For simple cross fading, the audio is multiplied by a ramp function and summed to generate the mixed audio.
+
+[![](static/xfade.pdf)]
+[![](static/mixed.pdf)](https://www.youtube.com/watch?v=uJoLrR6eXBQ)]
+
+For the cross fading with NSynth, lower dimensional embeddings are created. Cross fading is done on the embeddings instead of the raw audio, and this modified embedding is fed through the decoder to generate the resulting audio.
+
+[![](static/NSynth_enc.pdf)]
+[![](static/NSynth_xfade.pdf)](https://www.youtube.com/watch?v=pmEGEVNAf4g)]
+
+See this [presentation](http://bit.ly/2DZyzni) for further details.
 
 Table of contents
 =================
@@ -14,7 +28,7 @@ Table of contents
       * [Simple Cross Fading](#run-simple-cross-fading)
       * [NSynth Cross Fading](#run-nsynth-cross-fading)
       * [Training](#train-the-model-from-a-checkpoint)
-      * [Background](#model-background)
+   * [Background](#model-background)
 <!--te-->
 
 Setup
@@ -133,4 +147,4 @@ python train.py --train_path=<path-to-tfrecords> --total_batch_size=6 --logdir=<
 
 Model Background
 =====
-The NSynth model from Google's Magenta team was used to create the audio mixes (https://magenta.tensorflow.org/nsynth). Starting from their published checkpoint, the model was further trained on 4 second snippets from the beginning and endings of over 500 songs in the EDM genre. Therefore, the 16 kHz downsampling and 8-bit Mu encoding is still present.
+The NSynth model from Google's Magenta team was used to create the audio mixes (https://magenta.tensorflow.org/nsynth). Starting from their published checkpoint, the model was further trained on 4 second snippets from the beginning and endings of over 500 songs in the EDM genre. Therefore, the 16 kHz downsampling and 8-bit Mu encoding is still present. Thanks to the Magenta team for making their work open source.
