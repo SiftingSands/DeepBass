@@ -92,7 +92,7 @@ def NSynth(FirstSong, SecondSong, fade_type, fade_length, model_dir, save_dir,
     print('*** Decoding took ' + str((end-start)) + ' seconds ***')
 
     # Load the generated audio and the mu-law encodings for comparison
-    xfade_audio, _ = librosa.load(savename + '.wav')
+    xfade_audio, _ = librosa.load(savename + '.wav', sr=16000)
         
     
     return xfade_audio, x1_trim, x2_trim, enc1, enc2, xfade_encoding

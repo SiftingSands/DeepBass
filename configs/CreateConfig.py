@@ -23,6 +23,9 @@ def createconfig(config_path):
     config['IO']['Save Name'] = 'Exp1'
     config['IO']['Model Weights'] = '~/DeepBass/src/notebooks/wavenet-ckpt/model.ckpt-200000'
     
+    config['Plot'] = {}
+    config['Plot']['Flag'] = 'True'
+    
     with open(config_path, 'w') as configfile:
         config.write(configfile)
         

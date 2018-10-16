@@ -4,6 +4,7 @@ from ingestion.IO_utils import Load, Save
 from model.crossfade_NSynth import NSynth
 from preprocess.SilenceRemoval import SR
 from analysis.timbral_measures import timbral_measures
+from analysis.NSynth_plotting import Plot
 import sys
 import numpy as np
 import configparser
@@ -45,6 +46,7 @@ load_dir = config['IO']['Load Directory']
 save_dir = config['IO']['Save Directory']
 savename = config['IO']['Save Name']
 modelweights_path = config['IO']['Model Weights']
+PlotFlag = config['Plot']['Flag']
 
 # number of samples for fade
 fade_length = int(fade_time * sr)
@@ -88,3 +90,6 @@ roughness = timbral_measures(os.path.join(save_dir,savename+'_NSynth.wav'),\
 textfilepath = os.path.join(save_dir, savename+'_nsynth_roughness.txt')
 with open(textfilepath, 'w') as f:
     f.write('%f' % roughness)
+    
+if PlotFlag == 'True':
+    Plot(xfade_audio, x1_trim, x2_trim, enc1, enc2, xfade_enc, save_dir)

@@ -1,8 +1,7 @@
 # Deep Bass
 Automatic content driven cross fading between subsequent songs using a Wavenet autoencoder.
 
-See [presentation](http://bit.ly/2DZyzni) for additional details .
-
+See [presentation](http://bit.ly/2DZyzni) for additional details.
 
 Table of contents
 =================
@@ -15,6 +14,7 @@ Table of contents
       * [Simple Cross Fading](#run-simple-cross-fading)
       * [NSynth Cross Fading](#run-nsynth-cross-fading)
       * [Training](#train-the-model-from-a-checkpoint)
+      * [Background](#model-background)
 <!--te-->
 
 Setup
@@ -29,9 +29,9 @@ echo "export $repo_name=${PWD}" >> ~/.bash_profile
 echo "export PYTHONPATH=$repo_name/src:${PYTHONPATH}" >> ~/.bash_profile
 source ~/.bash_profile
 ```
-Create virtual environment. Install dependent packages from requirements.txt. "timbral_models" needed to be installed from source.
+Create virtual environment (commands below are for Anaconda, otherwise follow https://docs.python.org/3/tutorial/venv.html). Install dependent packages from requirements.txt. "timbral_models" needed to be installed from source.
 ```
-conda create --name DeepBass (if using Anaconda, otherwise follow https://docs.python.org/3/tutorial/venv.html to create a virtual environment)
+conda create --name DeepBass
 pip install -r /<path>/DeepBass/build/requirements.txt
 git clone https://github.com/AudioCommons/timbral_models.git
 cd timbral_models
@@ -85,6 +85,9 @@ load directory = /home/ubuntu/DeepBass/data/raw/Exp6
 save directory = /home/ubuntu/DeepBass/data/processed/Exp6_Retrained
 save name = Exp6
 model weights = /home/ubuntu/nsynth_train/model.ckpt-320000
+
+[Plot]
+Flag = True
 ```
 
 Run Simple Cross Fading
@@ -130,4 +133,4 @@ python train.py --train_path=<path-to-tfrecords> --total_batch_size=6 --logdir=<
 
 Model Background
 =====
-The NSynth model from Google's Magenta team was used to create the audio mixes (https://magenta.tensorflow.org/nsynth). Starting from their published checkpoint, the model was further trained on 4 second snippets from the beginning and endings of over 500 songs in the EDM genre. 
+The NSynth model from Google's Magenta team was used to create the audio mixes (https://magenta.tensorflow.org/nsynth). Starting from their published checkpoint, the model was further trained on 4 second snippets from the beginning and endings of over 500 songs in the EDM genre. Therefore, the 16 kHz downsampling and 8-bit Mu encoding is still present.

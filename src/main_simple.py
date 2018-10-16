@@ -3,6 +3,7 @@ import argparse
 from ingestion.IO_utils import Load, Save
 from model.crossfade_simple import Crossfade_Simple
 from analysis.timbral_measures import timbral_measures
+from analysis.simple_plotting import Plot
 import errno
 import configparser
 import sys
@@ -43,6 +44,7 @@ SecondSong = config['IO']['SecondSong']
 load_dir = config['IO']['Load Directory']
 save_dir = config['IO']['Save Directory']
 savename = config['IO']['Save Name']
+PlotFlag = config['Plot']['Flag']
 
 # Number of samples for fade
 fade_length = int(fade_time * sr)
@@ -81,3 +83,6 @@ roughness = timbral_measures(os.path.join(save_dir,savename+'_simple.wav'),\
 textfilepath = os.path.join(save_dir, savename+'_simple_roughness.txt')
 with open(textfilepath, 'w') as f:
     f.write('%f' % roughness)
+
+if PlotFlag == 'True':
+    Plot(fade, x1_trim_faded, x2_trim_faded, x1_trim, x2_trim, save_dir)
