@@ -17,7 +17,7 @@ For the cross fading with NSynth, lower dimensional embeddings are created. Cros
 
 [Encodings](static/NSynth_enc.pdf)
 
-[NSynth cross fade (click for audio)](static/NSynth_xfade.pdf)
+[NSynth cross fade](static/NSynth_xfade.pdf)
 
 [Play Audio](https://www.youtube.com/watch?v=pmEGEVNAf4g)
 
