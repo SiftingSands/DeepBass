@@ -3,17 +3,23 @@ Automatic content driven cross fading between subsequent songs using a Wavenet a
 
 This currently works on two audio files at a time. The ending of the first song and the beginning of the second song is isolated.
 
-[![](static/Audio_trim.pdf)]
+[Trim](static/Audio_trim.pdf)
 
 For simple cross fading, the audio is multiplied by a ramp function and summed to generate the mixed audio.
 
-[![](static/xfade.pdf)]
-[![](static/mixed.pdf)](https://www.youtube.com/watch?v=uJoLrR6eXBQ)]
+[Ramped](static/xfade.pdf)
+
+[Crossfaded](static/mixed.pdf)
+
+[Play Audio](https://www.youtube.com/watch?v=uJoLrR6eXBQ)
 
 For the cross fading with NSynth, lower dimensional embeddings are created. Cross fading is done on the embeddings instead of the raw audio, and this modified embedding is fed through the decoder to generate the resulting audio.
 
-[![](static/NSynth_enc.pdf)]
-[![](static/NSynth_xfade.pdf)](https://www.youtube.com/watch?v=pmEGEVNAf4g)]
+[Encodings](static/NSynth_enc.pdf)
+
+[NSynth cross fade (click for audio)](static/NSynth_xfade.pdf)
+
+[Play Audio](https://www.youtube.com/watch?v=pmEGEVNAf4g)
 
 See this [presentation](http://bit.ly/2DZyzni) for further details.
 
